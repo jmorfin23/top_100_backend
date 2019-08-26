@@ -11,8 +11,6 @@ def index():
 @app.route('/api/retrieve', methods=['GET'])
 def retrieve():
 
-
-    print('this should print')
     chart = ChartData('hot-100')
 
     if chart == []:
@@ -20,7 +18,7 @@ def retrieve():
         'empty': chart }})
 
     clist = []
-    print('test')
+
     #iterating through the list of songs
     for c in chart:
         blist = {
@@ -32,4 +30,5 @@ def retrieve():
     'data': clist
     }})
 
-    # return jsonify({ 'Error': 'Could not grab data.'})
+    # except:
+    #     return jsonify({ 'Error': 'Could not grab data.'})
