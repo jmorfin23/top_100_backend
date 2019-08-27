@@ -8,6 +8,7 @@ from billboard import ChartData
 def index():
     return ''
 
+
 @app.route('/api/retrieve', methods=['GET'])
 def retrieve():
 
