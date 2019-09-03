@@ -1,8 +1,11 @@
-from app import app
-from flask import jsonify
-from billboard import ChartData
+from app import app, db
+from flask import jsonify, request, redirect, url_for
+from billboard import ChartData #issue with this module
 import requests
 from bs4 import BeautifulSoup
+from app.models import User
+import time
+import jwt
 
 @app.route('/')
 @app.route('/index')
@@ -37,7 +40,7 @@ def retrieve():
                     image_list.append(tag['data-src'])
                 except:
                     image_list.append('https://assets.billboard.com/assets/1565881383/images/charts/bb-placeholder-new.jpg?f5cede3a841850a742ad')
-                    
+
         for title in titles:
             titles_list.append(title.get_text().strip())
 
@@ -56,6 +59,63 @@ def retrieve():
         return jsonify({ 'Success': song_elements })
     except:
         return jsonify({ 'Error': 'There is an issue that needs to be solved. '})
+
+
+
+@app.route('/api/login')
+def login():
+    try:
+        token = request.headers.get('token')
+
+        print(token)
+
+        # decode the token back to a dictionary
+        data = jwt.decode(
+            token,
+            app.config['SECRET_KEY'],
+            algorithm=['HS256']
+        )
+
+        print(data)
+
+        # query db to get user and check pass
+        user = User.query.filter_by(email=data['email']).first()
+
+        # if user doesn't exist or password incorrect, send fail msg
+        if user is None or not user.check_password(data['password']):
+            return jsonify({ 'message': 'Error #002: Invalid credentials' })
+
+        # create a token and return it
+        return jsonify({ 'message': 'success', 'token': user.get_token() })
+    except:
+        return jsonify({ 'message': 'Error #003: Failure to login' })
+
+
+@app.route('/api/register')
+def register():
+
+    try:
+
+        token = request.headers.get('token')
+
+
+        data = jwt.decode(
+            token,
+            app.config['SECRET_KEY'],
+            algorithm=['HS256']
+        )
+
+        user = User(email=data['email'])
+        user.set_password(data['password'])
+
+        db.session.add(user)
+        db.session.commit()
+
+
+        return jsonify({ 'message': 'success'})
+    except:
+        return jsonify({ 'Error': 'Error #004: Failure to register' })
+        #****** route for Billboard.py package *******
     # try:
     # chart = ChartData('hot-100')
     #
